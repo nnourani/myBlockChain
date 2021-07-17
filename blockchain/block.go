@@ -14,7 +14,7 @@ type Block struct {
 	Nonce    int
 }
 
-type BlockChain struct {
+type BlockChain2 struct {
 	Blocks []*Block
 }
 
@@ -44,18 +44,8 @@ func CreateBlock(data string, prevHash []byte) *Block {
 	return block
 }
 
-func (chain *BlockChain) AddBlock(data string) {
-	prevBlock := chain.Blocks[len(chain.Blocks)-1]
-	new := CreateBlock(data, prevBlock.Hash)
-	chain.Blocks = append(chain.Blocks, new)
-}
-
 func Genesis() *Block {
 	return CreateBlock("Genesis", []byte{})
-}
-
-func InitBlockChain() *BlockChain {
-	return &BlockChain{[]*Block{Genesis()}}
 }
 
 func (b *Block) Serialize() []byte {
@@ -70,7 +60,7 @@ func (b *Block) Serialize() []byte {
 	return res.Bytes()
 }
 
-func Deserialaize(data []byte) *Block {
+func Deserialize(data []byte) *Block {
 	var block Block
 
 	decoder := gob.NewDecoder(bytes.NewReader(data))
