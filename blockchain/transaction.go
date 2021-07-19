@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
+	"log"
 )
 
 const reward = 100
@@ -74,4 +76,42 @@ func (out *TxOutput) CanBeUnlocked(data string) bool {
 
 func (tx *Transaction) IsCoinbase() bool {
 	return len(tx.Inputs) == 1 && len(tx.Inputs[0].ID) == 0 && tx.Inputs[0].Out == -1
+}
+
+func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction {
+	var inputs []TxInput
+	var outputs []TxOutput
+
+	//STEP 1
+	acc, validOutputs := chain.FindSpendableOutputs(from, amount)
+
+	//STEP 2
+	if acc < amount {
+		log.Panic("Error: Not enough funds!")
+	}
+
+	//STEP 3
+	for txid, outs := range validOutputs {
+		txID, err := hex.DecodeString(txid)
+		Handle(err)
+
+		for _, out := range outs {
+			input := TxInput{txID, out, from}
+			inputs = append(inputs, input)
+		}
+	}
+
+	outputs = append(outputs, TxOutput{amount, to})
+
+	//STEP 4
+	if acc > amount {
+		outputs = append(outputs, TxOutput{acc - amount, from})
+	}
+
+	//STEP 5
+	tx := Transaction{nil, inputs, outputs}
+	//STEP 6
+	tx.SetID()
+
+	return &tx
 }
